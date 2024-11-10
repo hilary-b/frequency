@@ -32,9 +32,9 @@ def precompute(t,dim,dist,n):
                         aws_secret_access_key=AWS_SECRET_ACCESS_KEY
                         )
 
-    compute_dp_freq = True
-    compute_val_tup_freq = True
-    compute_matches = False
+    compute_dp_freq = False
+    compute_val_tup_freq = False
+    compute_matches = True
 
     # USE FIXED DOMAIN FOR EACH DIMENSION
     # TODO: allow domain to vary
@@ -138,7 +138,7 @@ def precompute(t,dim,dist,n):
 
         for t_tuple in combinations(records,t):
             sorted_tuple = tuple(sorted(t_tuple)) # sort record tuples for consistency
-            matches = find_matches_for_tuple(sorted_tuple,record_value_dict,dp_dict,dist,N)
+            matches = find_matches_for_tuple(sorted_tuple,record_value_dict,dp_dict,val_tup_freq_dict,dist,N)
             matches_dict[sorted_tuple] = matches
 
         # dump to pkl file
