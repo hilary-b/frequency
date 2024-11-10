@@ -30,7 +30,7 @@ def get_all_dominating_values(v,N):
             dominating_values.append(u)
     return dominating_values
 
-def find_matches_for_tuple(t_tuple,recval_dict,dp_dict,tup_val_dict,dist,N):
+def find_matches_for_tuple(t_tuple,recval_dict,tup_val_dict,dist,N):
     t = len(t_tuple)
     dimensions = len(t_tuple[0])
     val_tuple = tuple([recval_dict[r] for r in t_tuple])

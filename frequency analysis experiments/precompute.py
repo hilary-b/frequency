@@ -6,22 +6,14 @@ from itertools import product, combinations
 from helpers import *
 import boto3
 
-# parser = argparse.ArgumentParser()
-# parser.add_argument('t',type=int)
-# parser.add_argument('dim',type=int)
-# parser.add_argument('dist',type=str)
-# parser.add_argument('n',type=int)
-# args = parser.parse_args()
 
-# PARAMETERS
-# t = args.t
-# dim = args.dim,
-# dist = args.dist
-# n = args.n
+def precompute(t,dim,dist,n,dp=False,valtup=False,matches=False):
 
+    # Flags for which precompute tasks to perform
+    compute_dp_freq = dp
+    compute_val_tup_freq = valtup
+    compute_matches = matches
 
-
-def precompute(t,dim,dist,n):
 
     AWS_ACCESS_KEY_ID='AKIAYZTXUKO5VYMOKEQV'
     AWS_SECRET_ACCESS_KEY='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'
@@ -31,10 +23,6 @@ def precompute(t,dim,dist,n):
                         aws_access_key_id=AWS_ACCESS_KEY_ID,
                         aws_secret_access_key=AWS_SECRET_ACCESS_KEY
                         )
-
-    compute_dp_freq = False
-    compute_val_tup_freq = False
-    compute_matches = True
 
     # USE FIXED DOMAIN FOR EACH DIMENSION
     # TODO: allow domain to vary
@@ -93,6 +81,10 @@ def precompute(t,dim,dist,n):
 
     # COMPUTE THE FREQUENCY OF EVERY T-TUPLE OF VALUES
     if compute_val_tup_freq == True:
+
+        # Load dominant pair frequency dict
+        dp_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/dp_frequencies/{dist}/{dim}_dimensions.pkl").get()['Body'].read())
+
         # for a given domain and t value, find the frequency of every t tuple of values
         # and store in dict keyed by frequency
         precompute_timer = time.time()
@@ -108,6 +100,7 @@ def precompute(t,dim,dist,n):
         for val_tuple in combinations(vals,t):
             sorted_val_tup = tuple(sorted(val_tuple)) # sort values for consistency
             bounding_pair = get_mbq(sorted_val_tup)
+            freq = dp_dict[bounding_pair]
             freq = compute_pair_weight(bounding_pair,dist,N)
             if freq in val_tup_freq_dict.keys():
                 val_tup_freq_dict[freq].append(sorted_val_tup)
@@ -131,14 +124,14 @@ def precompute(t,dim,dist,n):
         matches_dict = {}
 
         # Load dominant pair frequency dict
-        dp_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/dp_frequencies/{dist}/{dim}_dimensions.pkl").get()['Body'].read())
+        # dp_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/dp_frequencies/{dist}/{dim}_dimensions.pkl").get()['Body'].read())
 
         # Load value frequency dict
         val_tup_freq_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/val_tup_frequencies/{dist}/{dim}_dim/t{t}.pkl").get()['Body'].read())
 
         for t_tuple in combinations(records,t):
             sorted_tuple = tuple(sorted(t_tuple)) # sort record tuples for consistency
-            matches = find_matches_for_tuple(sorted_tuple,record_value_dict,dp_dict,val_tup_freq_dict,dist,N)
+            matches = find_matches_for_tuple(sorted_tuple,record_value_dict,val_tup_freq_dict,dist,N)
             matches_dict[sorted_tuple] = matches
 
         # dump to pkl file

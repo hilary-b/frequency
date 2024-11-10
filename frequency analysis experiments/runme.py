@@ -6,21 +6,22 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-t')
 parser.add_argument('--dim')
 parser.add_argument('--dist', default="uniform")
+parser.add_argument('--dp')
+parser.add_argument('--valtup')
+parser.add_argument('--matches')
 args=parser.parse_args()
 
 t=int(args.t)
 dim=int(args.dim)
 dist = args.dist
 n = 10
-
-
-# for dim in range(1,4):
-#     for t in range(1,(2*dim)+1):
-#         precompute(t,dim,dist,n)
+dp = args.dp
+valtup = args.valtup
+matches = args.matches
 
 start = datetime.now()
 
-precompute(t=t,dim=dim,dist=dist, n=n)
+precompute(t=t,dim=dim,dist=dist, n=n,dp=dp,valtup=valtup,matches=matches)
 
 end = datetime.now()
 
