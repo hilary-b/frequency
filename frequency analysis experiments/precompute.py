@@ -7,13 +7,17 @@ from helpers import *
 import boto3
 
 
-def precompute(t,dim,dist,n,dp=False,valtup=False,matches=False):
+def precompute(t,dim,dist,n,dp,valtup,matches):
 
     # Flags for which precompute tasks to perform
     compute_dp_freq = dp
     compute_val_tup_freq = valtup
     compute_matches = matches
 
+    print(compute_dp_freq)
+    print(compute_val_tup_freq)
+    print(compute_matches)
+    input("...")
 
     AWS_ACCESS_KEY_ID='AKIAYZTXUKO5VYMOKEQV'
     AWS_SECRET_ACCESS_KEY='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'
@@ -41,7 +45,7 @@ def precompute(t,dim,dist,n,dp=False,valtup=False,matches=False):
     # TODO: load from file instead of hard-coding
     record_value_dict = {}
     if dim == 1:
-        record_value_dict = {0:(782),1:(418),2:{801},5:(906),20:(78),25:(33),121:(968),309:(354),313:(165),334:(862)}
+        record_value_dict = {0:(782),1:(418),2:(801),5:(906),20:(78),25:(33),121:(968),309:(354),313:(165),334:(862)}
     elif dim == 2:
         pass
     elif dim == 3:
@@ -101,7 +105,7 @@ def precompute(t,dim,dist,n,dp=False,valtup=False,matches=False):
             sorted_val_tup = tuple(sorted(val_tuple)) # sort values for consistency
             bounding_pair = get_mbq(sorted_val_tup)
             freq = dp_dict[bounding_pair]
-            freq = compute_pair_weight(bounding_pair,dist,N)
+            # freq = compute_pair_weight(bounding_pair,dist,N)
             if freq in val_tup_freq_dict.keys():
                 val_tup_freq_dict[freq].append(sorted_val_tup)
             else:

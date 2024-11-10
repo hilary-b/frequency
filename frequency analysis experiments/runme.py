@@ -15,9 +15,9 @@ t=int(args.t)
 dim=int(args.dim)
 dist = args.dist
 n = 10
-dp = args.dp
-valtup = args.valtup
-matches = args.matches
+dp = bool(args.dp)
+valtup = bool(args.valtup)
+matches = bool(args.matches)
 
 start = datetime.now()
 
