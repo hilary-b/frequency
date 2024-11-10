@@ -36,6 +36,9 @@ elif dimensions == 4:
 elif dimensions == 5:
     pass
 
+# LOAD dominant pair frequency dict
+
+
 # FIND RECONSTRUCTION USING T-CONSTRAINT RESULTS
 if iterate == False:
     solution = reconstruct(t,N,n,dimensions,distribution,record_value_dict,iterate=False,experiment_id=exp_id)

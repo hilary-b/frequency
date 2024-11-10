@@ -14,11 +14,6 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
     compute_val_tup_freq = valtup
     compute_matches = matches
 
-    print(compute_dp_freq)
-    print(compute_val_tup_freq)
-    print(compute_matches)
-    input("...")
-
     AWS_ACCESS_KEY_ID='AKIAYZTXUKO5VYMOKEQV'
     AWS_SECRET_ACCESS_KEY='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'
 
@@ -56,7 +51,7 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
         pass
 
     # COMPUTE THE FREQUENCY OF EVERY DOMINANT PAIR
-    if compute_dp_freq == True:
+    if compute_dp_freq == 1:
         precompute_timer = time.time()
         path = f"dp_frequencies/{dist}/{dim}_dimensions.pkl"
 
@@ -84,7 +79,7 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
 
 
     # COMPUTE THE FREQUENCY OF EVERY T-TUPLE OF VALUES
-    if compute_val_tup_freq == True:
+    if compute_val_tup_freq == 1:
 
         # Load dominant pair frequency dict
         dp_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/dp_frequencies/{dist}/{dim}_dimensions.pkl").get()['Body'].read())
@@ -121,21 +116,21 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
 
 
     # COMPUTE RECORD-VALUE MATCHES FOR T-CONSTRAINT
-    if compute_matches == True:
+    if compute_matches == 1:
         precompute_timer = time.time()
-        path = f"t{t}_matches/{dim}_dimensions.pkl"
+        path = f"matches/{dist}/{dim}_dim/t{t}.pkl"
         records = record_value_dict.keys()
         matches_dict = {}
 
         # Load dominant pair frequency dict
-        # dp_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/dp_frequencies/{dist}/{dim}_dimensions.pkl").get()['Body'].read())
+        dp_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/dp_frequencies/{dist}/{dim}_dimensions.pkl").get()['Body'].read())
 
         # Load value frequency dict
         val_tup_freq_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/val_tup_frequencies/{dist}/{dim}_dim/t{t}.pkl").get()['Body'].read())
 
         for t_tuple in combinations(records,t):
             sorted_tuple = tuple(sorted(t_tuple)) # sort record tuples for consistency
-            matches = find_matches_for_tuple(sorted_tuple,record_value_dict,val_tup_freq_dict,dist,N)
+            matches = find_matches_for_tuple(sorted_tuple,record_value_dict,val_tup_freq_dict,dp_dict,dist,N)
             matches_dict[sorted_tuple] = matches
 
         # dump to pkl file

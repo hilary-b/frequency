@@ -11,18 +11,48 @@ from csv import DictReader
 import pickle
 from ortools.sat.python import cp_model
 from helpers import *
+import boto3
 
 def reconstruct(t,N,n,dim,dist,recval_dict,iterate=False,experiment_id=None):
+    
+    AWS_ACCESS_KEY_ID='AKIAYZTXUKO5VYMOKEQV'
+    AWS_SECRET_ACCESS_KEY='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'
+
+    s3 = boto3.resource('s3', 
+                        use_ssl=False,
+                        aws_access_key_id=AWS_ACCESS_KEY_ID,
+                        aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+                        )
+    
+    # LOAD DOMINANT PAIR FREQUENCY DICT
+    dp_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/dp_frequencies/{dist}/{dim}_dimensions.pkl").get()['Body'].read())
+
+    # LOAD VALUE FREQUENCY DICT
+    val_tup_freq_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/val_tup_frequencies/{dist}/{dim}_dim/t{t}.pkl").get()['Body'].read())
+    
     model = cp_model.CpModel()
     records = recval_dict.keys()
+    record_candidates = {}
+
+    # IF t == 1, just use singleton candidates
+    if t == 1:
+        return
+
+
+    # LOAD SINGLETON CANDIDATES 
+    t1_matches = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/matches/{dist}/{dim}_dim/t{t}.pkl").get()['Body'].read())
+    
     # Add constraints for every t-tuple of records
-    for t_tuple in combinations(records,t):
-        print(t_tuple)
+    for rec_t_tuple in combinations(records,t):
+        val_t_tuple = tuple(sorted([recval_dict[r] for r in rec_t_tuple]))
+        bounding_pair = get_mbq(val_t_tuple)
+        freq = dp_dict[bounding_pair]
+        matches = val_tup_freq_dict[freq]
     
 
-    # # Create 10 variables with values between 1 and 1000
-    # num_vars = 10
-    # variables = [model.NewIntVar(1, 1000, f'var{i}') for i in range(num_vars)]
+    # Create 10 variables with values between 1 and 1000
+    num_vars = 10
+    variables = [model.NewIntVar(1, 1000, f'var{i}') for i in range(num_vars)]
 
     # # Create auxiliary Boolean variables for OR conditions
     # # For each OR condition, we will introduce a Boolean variable to represent whether the condition holds.
