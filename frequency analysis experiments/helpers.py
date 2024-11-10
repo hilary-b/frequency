@@ -4,6 +4,7 @@ from itertools import product, combinations
 
 # return the mbq of a t-tuple
 def get_mbq(t_tup):
+    t = len(t_tup)
     dim = len(t_tup[0])
     minima = []
     maxima = []
@@ -29,25 +30,19 @@ def get_all_dominating_values(v,N):
             dominating_values.append(u)
     return dominating_values
 
-def find_matches_for_tuple(t_tuple,recval_dict,dp_dict,val_freq_dict,dist,N):
+def find_matches_for_tuple(t_tuple,recval_dict,dp_dict,tup_val_dict,dist,N):
+    t = len(t_tuple)
+    dimensions = len(t_tuple[0])
     val_tuple = tuple([recval_dict[r] for r in t_tuple])
-    print(f"val tuple: {val_tuple}")
-    if len(t_tuple) == 1:
-        bounding_pair = get_mbq((val_tuple,val_tuple))
-    else:
-        bounding_pair = get_mbq(val_tuple)
-    print(bounding_pair)
+    bounding_pair = get_mbq(val_tuple)
     tuple_frequency = compute_pair_weight(bounding_pair,dist,N) # lookup frequency of bounding pair
-    matches = val_freq_dict[tuple_frequency]
+    matches = tup_val_dict[tuple_frequency]
     return matches
 
 # returns Manhattan distance of points u and v
 def l1_distance(u,v):
     sum = 0
     for i in range(len(u)):
-        print(u[i])
-        print(v[i])
-        input("...")
         sum += abs(u[i]-v[i])
     return sum
 
