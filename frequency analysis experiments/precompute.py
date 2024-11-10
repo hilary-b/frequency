@@ -7,6 +7,7 @@ from helpers import *
 import boto3
 from collections import defaultdict
 from tqdm import tqdm
+import psutil
 
 
 def precompute(t,dim,dist,n,dp,valtup,matches):
@@ -96,7 +97,11 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
         precompute_timer = time.time()
         path = f"val_tup_frequencies/{dist}/{dim}_dim/t{t}.pkl"
 
-        results = chunk_and_process(dist, dim, N, t, dp_dict, chunk_size=10000)
+
+        available_memory = psutil.virtual_memory().available  # in bytes
+        chunk_size = min(available_memory // 10, 10000)  # 10% of available memory or 10,000 combinations
+
+        results = chunk_and_process(dist, dim, N, t, dp_dict, chunk_size=chunk_size)
         print(f"computed value tuple frequencies in {dim} dimension for {dist} dist in {time.time()-precompute_timer}")
 
         # dump results to pkl

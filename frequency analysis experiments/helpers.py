@@ -3,27 +3,56 @@ from itertools import *
 from multiprocessing import Pool, cpu_count
 from collections import defaultdict
 from tqdm import tqdm
+import numpy as np
 
-def process_val_tuple(val_tuple, dp_dict):
+
+def convert_dp_dict_to_numpy(dp_dict):
+
+    # Assuming dp_dict is structured like: {bounding_pair: frequency_value}
+    
+    # Convert keys of dp_dict (bounding pairs) to indices
+    bounding_pairs = list(dp_dict.keys())  # List of bounding pairs
+    freq_values = list(dp_dict.values())  # List of corresponding frequency values
+    
+    # Create a mapping from bounding pair to index
+    pair_to_index = {pair: idx for idx, pair in enumerate(bounding_pairs)}
+    
+    # Convert the frequency values to a numpy array for efficient access
+    freq_array = np.array(freq_values)
+    
+    return pair_to_index, freq_array
+
+def process_val_tuple(val_tuple, pair_to_index, freq_array):
     """Process each combination tuple in a parallel process."""
     sorted_val_tup = tuple(sorted(val_tuple))
     bounding_pair = get_mbq(sorted_val_tup)
-    freq = dp_dict.get(bounding_pair, 0)
+    
+    # Use pair_to_index to get the index for the bounding pair
+    if bounding_pair in pair_to_index:
+        index = pair_to_index[bounding_pair]
+        freq = freq_array[index]
+    else:
+        freq = 0  # Default if bounding pair is not found
+    
     return freq, sorted_val_tup
-
 def chunk_and_process(dist, dim, N, t, dp_dict, chunk_size=10000):
+    # Convert dp_dict to numpy arrays before starting
+    pair_to_index, freq_array = convert_dp_dict_to_numpy(dp_dict)
+    
     # Generate the domain and combinations iterator
     domain = range(1, N + 1)
     combinations_iterator = combinations(product(domain, repeat=dim), t)
+    
+    # Count total number of combinations (for progress bar)
     total_combinations = math.comb(N**dim, t)
-
+    
     # Create a Pool for parallel processing
     with Pool(processes=cpu_count()) as pool:
         val_tup_freq_dict = defaultdict(list)
-
+        
         # Initialize the progress bar
         with tqdm(total=total_combinations, unit='combination', desc="Processing Combinations") as pbar:
-
+            
             while True:
                 # Slice out a chunk of combinations to process
                 chunk = list(islice(combinations_iterator, chunk_size))
@@ -33,7 +62,7 @@ def chunk_and_process(dist, dim, N, t, dp_dict, chunk_size=10000):
                     break
                 
                 # Process the chunk in parallel
-                results = pool.starmap(process_val_tuple, [(val_tuple, dp_dict) for val_tuple in chunk])
+                results = pool.starmap(process_val_tuple, [(val_tuple, pair_to_index, freq_array) for val_tuple in chunk])
                 
                 # Collect the results into the dictionary
                 for freq, sorted_val_tup in results:
