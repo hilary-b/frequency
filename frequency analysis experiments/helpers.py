@@ -1,7 +1,49 @@
 import math
-import pickle
-from itertools import product, combinations
+from itertools import *
+from multiprocessing import Pool, cpu_count
+from collections import defaultdict
+from tqdm import tqdm
 
+def process_val_tuple(val_tuple, dp_dict):
+    """Process each combination tuple in a parallel process."""
+    sorted_val_tup = tuple(sorted(val_tuple))
+    bounding_pair = get_mbq(sorted_val_tup)
+    freq = dp_dict.get(bounding_pair, 0)
+    return freq, sorted_val_tup
+
+def chunk_and_process(dist, dim, N, t, dp_dict, chunk_size=10000):
+    # Generate the domain and combinations iterator
+    domain = range(1, N + 1)
+    combinations_iterator = combinations(product(domain, repeat=dim), t)
+    total_combinations = math.comb(N**dim, t)
+
+    # Create a Pool for parallel processing
+    with Pool(processes=cpu_count()) as pool:
+        val_tup_freq_dict = defaultdict(list)
+
+        # Initialize the progress bar
+        with tqdm(total=total_combinations, unit='combination', desc="Processing Combinations") as pbar:
+
+            while True:
+                # Slice out a chunk of combinations to process
+                chunk = list(islice(combinations_iterator, chunk_size))
+                
+                # If chunk is empty, we've processed all combinations
+                if not chunk:
+                    break
+                
+                # Process the chunk in parallel
+                results = pool.starmap(process_val_tuple, [(val_tuple, dp_dict) for val_tuple in chunk])
+                
+                # Collect the results into the dictionary
+                for freq, sorted_val_tup in results:
+                    val_tup_freq_dict[freq].append(sorted_val_tup)
+                
+                # Update the progress bar
+                pbar.update(len(chunk))  # Increment progress bar by the chunk size
+        
+        return val_tup_freq_dict
+    
 # return the mbq of a t-tuple
 def get_mbq(t_tup):
     t = len(t_tup)
