@@ -40,13 +40,27 @@ def find_matches_for_tuple(t_tuple,recval_dict,tup_val_dict,dp_dict,dist,N):
     bounding_pair = get_mbq(val_tuple)
     # tuple_frequency = compute_pair_weight(bounding_pair,dist,N) # lookup frequency of bounding pair
     tuple_frequency = dp_dict[bounding_pair]
-    print(f"rec t_tuple: {t_tuple}")
-    print(f"val tuple: {val_tuple}")
-    print(f"tuple freq: {tuple_frequency}")
-    # print(243694 in tup_val_dict.keys())
-    input("...")
+    # print(f"rec t_tuple: {t_tuple}")
+    # print(f"val tuple: {val_tuple}")
+    # print(f"tuple freq: {tuple_frequency}")
+    # # print(243694 in tup_val_dict.keys())
+    # input("...")
     matches = tup_val_dict[tuple_frequency]
     return matches
+
+def make_random_points():
+    import numpy as np
+
+    # Generate 10 random x-coordinates between 0 and 1
+    x = np.random.randrange(1,32)
+
+    # Generate 10 random y-coordinates between 0 and 1
+    y = np.random.randrange(1,32)
+
+    # Combine x and y coordinates into a 2D array
+    points = np.column_stack((x, y))
+
+    print(points)
 
 # returns Manhattan distance of points u and v
 def l1_distance(u,v):
