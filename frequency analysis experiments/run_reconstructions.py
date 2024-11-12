@@ -1,7 +1,7 @@
 from reconstruct import *
 
 # PARAMETERS
-t = 1 # set t-constraint for reconstruction and/or finding matches
+t = 2 # set t-constraint for reconstruction and/or finding matches
 n = 10 # set number of records
 dimensions = 2
 distribution = 'uniform' # set query distribution
