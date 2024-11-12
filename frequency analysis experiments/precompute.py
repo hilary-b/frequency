@@ -1,10 +1,13 @@
 import pickle
 import math
 import time
-import argparse
+import multiprocessing
 from itertools import product, combinations
 from helpers import *
 import boto3
+from collections import defaultdict
+from tqdm import tqdm
+import psutil
 
 
 def precompute(t,dim,dist,n,dp,valtup,matches):
@@ -87,33 +90,20 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
         # for a given domain and t value, find the frequency of every t tuple of values
         # and store in dict keyed by frequency
         precompute_timer = time.time()
-        total_t_tups = math.comb(1000,t)
-        progress_counter = 0
-        vals = []
         path = f"val_tup_frequencies/{dist}/{dim}_dim/t{t}.pkl"
-        val_tup_freq_dict = {}
-        # all values in domain
-        for v in product(range(1, N + 1), repeat=dim):
-            vals.append(v)
-        # iterate over all t-tuples of values
-        for val_tuple in combinations(vals,t):
-            sorted_val_tup = tuple(sorted(val_tuple)) # sort values for consistency
-            bounding_pair = get_mbq(sorted_val_tup)
-            freq = dp_dict[bounding_pair]
-            # freq = compute_pair_weight(bounding_pair,dist,N)
-            if freq in val_tup_freq_dict.keys():
-                val_tup_freq_dict[freq].append(sorted_val_tup)
-            else:
-                val_tup_freq_dict[freq] = [sorted_val_tup]
-            progress_counter += 1
-            if progress_counter %100000 == 0:
-                print(f"progress on val tuples: {progress_counter/total_t_tups}")
-        # dump to pkl
-        object = s3.Object('freq-analysis',f'results/{path}' )
-        object.put(Body=pickle.dumps(val_tup_freq_dict))
 
+
+        available_memory = psutil.virtual_memory().available  # in bytes
+        chunk_size = min(available_memory // 10, 10000)  # 10% of available memory or 10,000 combinations
+
+        results = chunk_and_process(dist, dim, N, t, dp_dict, chunk_size=chunk_size)
         print(f"computed value tuple frequencies in {dim} dimension for {dist} dist in {time.time()-precompute_timer}")
 
+        # dump results to pkl
+        with open('./3x3.pkl', 'wb') as f:
+            pickle.dump(results, f)
+        object = s3.Object('freq-analysis',f'results/{path}' )
+        object.put(Body=pickle.dumps(results))
 
     # COMPUTE RECORD-VALUE MATCHES FOR T-CONSTRAINT
     if compute_matches == 1:
