@@ -42,7 +42,7 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
     if dim == 1:
         record_value_dict = {0:(782),1:(418),2:(801),5:(906),20:(78),25:(33),121:(968),309:(354),313:(165),334:(862)}
     elif dim == 2:
-        record_value_dict = {0:(32,3),1:(19,20),2:(10,27),5:(4,23),20:(27,12),25:(3.13),121:(29,12),309:(30,9),313:(18,16),334:(5,24)}
+        record_value_dict = {0:(32,3),1:(19,20),2:(10,27),5:(4,23),20:(27,12),25:(3,13),121:(29,12),309:(30,9),313:(18,16),334:(5,24)}
     elif dim == 3:
         record_value_dict = {0:(4,2,9),1:(6,5,9),2:(3,2,1),3:(3,3,9),4:(3,3,1),5:(2,2,1),7:(2,1,10),9:(2,3,1),10:(4,3,9),11:(6,1,9)}
     elif dim == 4:
@@ -101,12 +101,11 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
         # iterate over all t-tuples of values
         for val_tuple in combinations(vals,t):
             sorted_val_tup = tuple(sorted(val_tuple)) # sort values for consistency
+            # print(sorted_val_tup[0])
+            # input("///")
             bounding_pair = get_mbq(sorted_val_tup)
             freq = dp_dict[bounding_pair]
-            # if freq == 243694:
-            #     print(f"val tup {val_tuple} with bp {bounding_pair} has the frequency")
-            #     input("...")
-            # freq = compute_pair_weight(bounding_pair,dist,N)
+
             if freq in val_tup_freq_dict.keys():
                 val_tup_freq_dict[freq].append(sorted_val_tup)
             else:
@@ -122,10 +121,43 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
 
 
     # COMPUTE RECORD-VALUE MATCHES FOR T-CONSTRAINT
+
+    # # method that uses t-1 results to refine matches
+    # if compute_matches == 1:
+    #     precompute_timer = time.time()
+    #     path = f"matches/{dist}/{dim}_dim/t{t}.pkl"
+    #     records = list(record_value_dict.keys())
+    #     matches_dict = {}
+
+    #     # Load dominant pair frequency dict
+    #     dp_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/dp_frequencies/{dist}/{dim}_dimensions.pkl").get()['Body'].read())
+
+    #     # Load value frequency dict
+    #     val_tup_freq_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/val_tup_frequencies/{dist}/{dim}_dim/t{t}.pkl").get()['Body'].read())
+        
+    #     # for t==1 just compute singleton candidates and store as t1 matches
+    #     if t == 1:
+        
+    #         for t_tuple in combinations(records,t):
+    #             sorted_tuple = tuple(sorted(t_tuple)) # sort record tuples for consistency
+    #             matches = find_matches_for_tuple(sorted_tuple,record_value_dict,val_tup_freq_dict,dp_dict,dist,N)
+    #             matches_dict[sorted_tuple] = matches
+
+    #         # dump to pkl file
+    #         object = s3.Object('freq-analysis',f'results/{path}')
+    #         object.put(Body=pickle.dumps(matches_dict))
+
+    #         print(f"precomputed t{t} matches for {dim} dimensions in {time.time()-precompute_timer} seconds")
+        
+    #     # for t > 1, use small solver instances to refine matches
+    #     if t > 1:
+
+    
+    # old method without t-1 checks
     if compute_matches == 1:
         precompute_timer = time.time()
         path = f"matches/{dist}/{dim}_dim/t{t}.pkl"
-        records = record_value_dict.keys()
+        records = list(record_value_dict.keys())
         matches_dict = {}
 
         # Load dominant pair frequency dict
@@ -137,8 +169,11 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
         for t_tuple in combinations(records,t):
             sorted_tuple = tuple(sorted(t_tuple)) # sort record tuples for consistency
             matches = find_matches_for_tuple(sorted_tuple,record_value_dict,val_tup_freq_dict,dp_dict,dist,N)
+            # print(matches)
+            # input("...")
             matches_dict[sorted_tuple] = matches
-
+        # print(matches_dict)
+        # input("...")
         # dump to pkl file
         object = s3.Object('freq-analysis',f'results/{path}')
         object.put(Body=pickle.dumps(matches_dict))

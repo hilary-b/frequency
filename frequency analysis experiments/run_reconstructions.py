@@ -1,12 +1,12 @@
 from reconstruct import *
 
 # PARAMETERS
-t = 2 # set t-constraint for reconstruction and/or finding matches
+t = 1 # set t-constraint for reconstruction and/or finding matches
 n = 10 # set number of records
-dimensions = 1
+dimensions = 2
 distribution = 'uniform' # set query distribution
 N = 0
-iterate = True # set to true to find every reconstruction
+iterate = False # set to true to find every reconstruction
 exp_id = None # give a unique id to experiment
 
 # USE FIXED DOMAIN FOR EACH DIMENSION
@@ -47,5 +47,6 @@ if iterate == False:
 elif iterate == True:
     solutions = reconstruct(t,N,n,dimensions,distribution,record_value_dict,iterate=True,experiment_id=exp_id)
     print(f"found {len(solutions)} reconstructions")
-    # for s in solutions:
-    #     print(s)
+    for s in solutions:
+        print(s)
+        input("...")

@@ -4,6 +4,7 @@ from itertools import product, combinations
 
 # return the mbq of a t-tuple
 def get_mbq(t_tup):
+    # print(t_tup)
     # t = len(t_tup)
     # if type(t_tup[0]) == int:
     #     return(((t_tup[0],),(t_tup[0],)))
@@ -36,13 +37,25 @@ def get_all_dominating_values(v,N):
 def find_matches_for_tuple(t_tuple,recval_dict,tup_val_dict,dp_dict,dist,N):
     # t = len(t_tuple)
     # dimensions = len(t_tuple[0])
-    val_tuple = tuple([recval_dict[r] for r in t_tuple])
+    # val_tuple = tuple([recval_dict[r] for r in t_tuple])
+    val_tuple = []
+    for r in t_tuple:
+        val_tuple.append((recval_dict[r],))
+    val_tuple = tuple(val_tuple)
     bounding_pair = get_mbq(val_tuple)
-    # tuple_frequency = compute_pair_weight(bounding_pair,dist,N) # lookup frequency of bounding pair
-    tuple_frequency = dp_dict[bounding_pair]
-    if tuple_frequency == 243694:
-        print(f"val tup {val_tuple} with bp {bounding_pair} has the frequency")
-        input("...")
+    print(f"val tuple: {val_tuple} was assigned bounding pair {bounding_pair}")
+    # print(dp_dict)
+    # input("...")
+    clean_bp = []
+    for tup in bounding_pair:
+        clean_bp.append(tup[0])
+    clean_bp = tuple(clean_bp)
+    # print(clean_bp)
+    # input("///")
+    tuple_frequency = dp_dict[clean_bp]
+    # if tuple_frequency == 243694:
+    #     print(f"val tup {val_tuple} with bp {bounding_pair} has the frequency")
+    #     input("...")
     matches = tup_val_dict[tuple_frequency]
     return matches
 

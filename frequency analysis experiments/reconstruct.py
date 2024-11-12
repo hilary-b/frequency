@@ -1,4 +1,4 @@
-from itertools import product, combinations
+from itertools import product, combinations, permutations
 import random
 import logging
 import datetime
@@ -6,6 +6,7 @@ import json
 import io
 import sys
 import time
+import math
 from multiprocessing.pool import Pool
 from csv import DictReader
 import pickle
@@ -33,36 +34,72 @@ def reconstruct(t,N,n,dim,dist,recval_dict,iterate=False,experiment_id=None):
     val_tup_freq_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/val_tup_frequencies/{dist}/{dim}_dim/t{t}.pkl").get()['Body'].read())
     
     # LOAD T1 MATCHES
-    t1_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/matches/{dist}/{dim}_dim/t{t}.pkl").get()['Body'].read())
-        
+    t1_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/matches/{dist}/{dim}_dim/t1.pkl").get()['Body'].read())
+    # print(t1_dict)
+    # input("...")
     # initialize constraint problem using t1 matches as variable domains
     problem = Problem()
     records = list(recval_dict.keys())
+    # save record indices
+    rec_index = {}
+    for i in range(len(records)):
+        rec_index[records[i]]=i
 
-    # create variables
+    # create variables using t1 matches
+    rec_strings = []
     for record in records:
         matches = t1_dict[(record,)]
-        problem.addVariable(str(record),matches)
+        cleaned_matches = []
+        for m in matches:
+            cleaned_matches.append(m[0])
+        # print(cleaned_matches)
+        # input("...")
+        problem.addVariable(str(record),cleaned_matches)
+        rec_strings.append(str(record))
     problem.addConstraint(AllDifferentConstraint())
     
     # for t == 1, skip the rest and solve
     if t > 1:
-        pass
-    # # load the t-test results
-    # with open(f't{t}_matches/dim_{dim}_N_{N}_n_{n}_dist_{dist}_exp_id_{experiment_id}.pkl','rb') as f:
-    #     t_matches = pickle.load(f)
+        t_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/matches/{dist}/{dim}_dim/t{t}.pkl").get()['Body'].read())
+        # iterate over t-tuples of records
+        for rec_tup in combinations(records,t):
+            sorted_tuple = tuple(sorted(rec_tup))
+            matches = t_dict[sorted_tuple]
+            funcstring = "def func(*args): return ("
 
-    # for item in t_matches.items():
-    #     print(item)
-    #     input("...")
+            # process each matching t-tuple
+            num_matches = len(matches)
+            stop = num_matches * math.factorial(t)
+            clause_count = 0
+            for match in matches:
+                # process each permutation of a match
+                for candidate in permutations(match,t):
+                    # OR together each candidate
+                    funcstring += "("
+                    for i in range(t):
+                        rec = sorted_tuple[i]
+                        funcstring += f"args[{rec_index[rec]}] == {candidate[i]}"
+                        if i != t-1:
+                            funcstring += " and "
+                        else:
+                            funcstring += ")"
+                    clause_count += 1
+                    if clause_count != stop:
+                        funcstring += " or "
+            funcstring += ")"
+            # print(funcstring)
+            # input("...")
+            exec(funcstring)    
+            constraint_string = "problem.addConstraint(FunctionConstraint(func),rec_strings)"
+            exec(constraint_string)
 
-    # # add the results as constraints
+    # add the results as constraints
     # for t_minus_1_tup in combinations(rec_tup,t-1):
     #     # sort record_id tuple for consistency on lookups
     #     sorted_recs = tuple(sorted(list(t_minus_1_tup)))
         
     #     # get all t-1 matches
-    #     matches = t_minus_1_matches[sorted_recs]
+        # matches = t_minus_1_matches[sorted_recs]
 
     #     # add all the t-1 matches as OR'ed constraints
     #     # by dynamically creating a function
