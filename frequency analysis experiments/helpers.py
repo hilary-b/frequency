@@ -75,13 +75,16 @@ def chunk_and_process(dist, dim, N, t, dp_dict, chunk_size=10000):
     
 # return the mbq of a t-tuple
 def get_mbq(t_tup):
-    t = len(t_tup)
-    dim = len(t_tup[0])
-    minima = []
-    maxima = []
-    for d in range(dim):
-        maxima.append(max([v[d] for v in t_tup]))
-        minima.append(min([v[d] for v in t_tup]))
+    # t = len(t_tup)
+    if type(t_tup[0]) == int:
+        return(((t_tup[0],),(t_tup[0],)))
+    else:
+        dim = len(t_tup[0])
+        minima = []
+        maxima = []
+        for d in range(dim):
+            maxima.append(max([v[d] for v in t_tup]))
+            minima.append(min([v[d] for v in t_tup]))
     return(tuple(minima),tuple(maxima))
 
 # return True if u dominates v, else False
@@ -101,14 +104,34 @@ def get_all_dominating_values(v,N):
             dominating_values.append(u)
     return dominating_values
 
-def find_matches_for_tuple(t_tuple,recval_dict,tup_val_dict,dist,N):
-    t = len(t_tuple)
-    dimensions = len(t_tuple[0])
+def find_matches_for_tuple(t_tuple,recval_dict,tup_val_dict,dp_dict,dist,N):
+    # t = len(t_tuple)
+    # dimensions = len(t_tuple[0])
     val_tuple = tuple([recval_dict[r] for r in t_tuple])
     bounding_pair = get_mbq(val_tuple)
-    tuple_frequency = compute_pair_weight(bounding_pair,dist,N) # lookup frequency of bounding pair
+    # tuple_frequency = compute_pair_weight(bounding_pair,dist,N) # lookup frequency of bounding pair
+    tuple_frequency = dp_dict[bounding_pair]
+    # print(f"rec t_tuple: {t_tuple}")
+    # print(f"val tuple: {val_tuple}")
+    # print(f"tuple freq: {tuple_frequency}")
+    # # print(243694 in tup_val_dict.keys())
+    # input("...")
     matches = tup_val_dict[tuple_frequency]
     return matches
+
+def make_random_points():
+    import numpy as np
+
+    # Generate 10 random x-coordinates between 0 and 1
+    x = np.random.randrange(1,32)
+
+    # Generate 10 random y-coordinates between 0 and 1
+    y = np.random.randrange(1,32)
+
+    # Combine x and y coordinates into a 2D array
+    points = np.column_stack((x, y))
+
+    print(points)
 
 # returns Manhattan distance of points u and v
 def l1_distance(u,v):
