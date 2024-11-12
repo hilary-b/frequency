@@ -105,6 +105,8 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
         print(f"computed value tuple frequencies in {dim} dimension for {dist} dist in {time.time()-precompute_timer}")
 
         # dump results to pkl
+        with open('./3x3.pkl', 'wb') as f:
+            pickle.dump(results, f)
         object = s3.Object('freq-analysis',f'results/{path}' )
         object.put(Body=pickle.dumps(results))
 
