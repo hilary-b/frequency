@@ -3,7 +3,7 @@ from reconstruct import *
 # PARAMETERS
 t = 2 # set t-constraint for reconstruction and/or finding matches
 n = 10 # set number of records
-dimensions = 2
+dimensions = 3
 distribution = 'uniform' # set query distribution
 N = 0
 iterate = False # set to true to find every reconstruction
@@ -32,21 +32,22 @@ elif dimensions == 2:
 elif dimensions == 3:
     record_value_dict = {0:(4,2,9),1:(6,5,9),2:(3,2,1),3:(3,3,9),4:(3,3,1),5:(2,2,1),7:(2,1,10),9:(2,3,1),10:(4,3,9),11:(6,1,9)}
 elif dimensions == 4:
-    pass
+    record_value_dict = {0:(4,2,5,3),1:(6,5,2,1),2:(3,2,1,3),3:(3,4,3,6),4:(3,3,1,5),5:(2,2,1,6),7:(2,1,5,6),9:(2,3,1,1),10:(4,3,6,2),11:(6,1,6,3)}
 elif dimensions == 5:
-    pass
+    record_value_dict = {0:(4,2,1,3,2),1:(4,4,2,1,2),2:(3,2,1,3,1),3:(3,4,3,4,2),4:(3,3,1,1,4),5:(2,2,1,2,4),7:(2,1,1,2,2),9:(2,3,1,1,3),10:(4,3,1,2,1),11:(1,1,1,3,3)}
 
 # LOAD dominant pair frequency dict
 
 
 # FIND RECONSTRUCTION USING T-CONSTRAINT RESULTS
+start_time = time.time()
 if iterate == False:
     solution = reconstruct(t,N,n,dimensions,distribution,record_value_dict,iterate=False,experiment_id=exp_id)
-    print("found a reconstruction:")
+    print(f"found a reconstruction in {time.time()-start_time}:")
     print(solution)
 elif iterate == True:
     solutions = reconstruct(t,N,n,dimensions,distribution,record_value_dict,iterate=True,experiment_id=exp_id)
-    print(f"found {len(solutions)} reconstructions")
+    print(f"found {len(solutions)} reconstructions in {time.time()-start_time}")
     for s in solutions:
         print(s)
         input("...")

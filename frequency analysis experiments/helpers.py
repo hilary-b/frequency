@@ -42,7 +42,7 @@ def find_matches_for_tuple(t_tuple,recval_dict,tup_val_dict,dp_dict,dist,N):
     for r in t_tuple:
         val_tuple.append(recval_dict[r],)
     val_tuple = tuple(val_tuple)
-    print(f"val_tuple: {val_tuple}")
+    # print(f"val_tuple: {val_tuple}")
     bounding_pair = get_mbq(val_tuple)
     tuple_frequency = dp_dict[bounding_pair]
     matches = tup_val_dict[tuple_frequency]
