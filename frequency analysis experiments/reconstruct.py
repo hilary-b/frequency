@@ -12,9 +12,11 @@ import pickle
 from ortools.sat.python import cp_model
 from helpers import *
 import boto3
+from constraint import *
 
+# python-constraint reconstruct
 def reconstruct(t,N,n,dim,dist,recval_dict,iterate=False,experiment_id=None):
-    
+
     AWS_ACCESS_KEY_ID='AKIAYZTXUKO5VYMOKEQV'
     AWS_SECRET_ACCESS_KEY='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'
 
@@ -30,72 +32,165 @@ def reconstruct(t,N,n,dim,dist,recval_dict,iterate=False,experiment_id=None):
     # LOAD VALUE FREQUENCY DICT
     val_tup_freq_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/val_tup_frequencies/{dist}/{dim}_dim/t{t}.pkl").get()['Body'].read())
     
+    # LOAD T1 MATCHES
+    t1_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/matches/{dist}/{dim}_dim/t{t}.pkl").get()['Body'].read())
+        
+    # initialize constraint problem using t1 matches as variable domains
+    problem = Problem()
     records = list(recval_dict.keys())
 
-    # IF t == 1, just use singleton candidates
-    if t == 1:
-        t1_matches = val_tup_freq_dict
-        model = cp_model.CpModel()
-        # each record is a collection of integer variables, one for each dimension
-        vars = [[model.NewIntVar(1, N, f'rec_{records[i]}_{j}') for j in range(dim)] for i in range(n)]
+    # create variables
+    for record in records:
+        matches = t1_dict[(record,)]
+        problem.addVariable(str(record),matches)
+    problem.addConstraint(AllDifferentConstraint())
+    
+    # for t == 1, skip the rest and solve
+    if t > 1:
+        pass
+    # # load the t-test results
+    # with open(f't{t}_matches/dim_{dim}_N_{N}_n_{n}_dist_{dist}_exp_id_{experiment_id}.pkl','rb') as f:
+    #     t_matches = pickle.load(f)
+
+    # for item in t_matches.items():
+    #     print(item)
+    #     input("...")
+
+    # # add the results as constraints
+    # for t_minus_1_tup in combinations(rec_tup,t-1):
+    #     # sort record_id tuple for consistency on lookups
+    #     sorted_recs = tuple(sorted(list(t_minus_1_tup)))
         
-        # iterate over all records, adding matches as constraints
-        # for rec in records:
-        #     matches = t1_matches[(rec,)]
-        #     for match in matches:
+    #     # get all t-1 matches
+    #     matches = t_minus_1_matches[sorted_recs]
+
+    #     # add all the t-1 matches as OR'ed constraints
+    #     # by dynamically creating a function
+    #     funcstring = "def func(*args): return ("
+
+    #     # OR together each match
+    #     stop = len(matches)
+    #     count = 0
+
+    #     for m in matches:
+    #         count += 1
+    #         funcstring += "("
+    #         for i in range(t-1):
+    #             rec = t_minus_1_tup[i]
+    #             # print(f"i = {i} rec: {rec} has position {rec_pos[rec]}")
+    #             funcstring += f"args[{rec_pos[rec]}] == {m[i]}"
+    #             if i != t-2:
+    #                 funcstring += " and "
+    #             else:
+    #                 funcstring += ")"
+    #         if count != stop:
+    #             funcstring += " or "
+    #     funcstring += ")"
+    #     exec(funcstring)
+
+    #     # add the t-1 constraint to the problem
+    #     constraint_string = "problem.addConstraint(FunctionConstraint(func),rec_id_strings)"
+    #     exec(constraint_string)
+    #     count += 1
+    #     if count % 100 == 0:
+    #         print(count/total_t_tuples)
+
+    # find a reconstruction!
+    if iterate == False: # return a single reconstruction
+        reconstruction = problem.getSolution()
+        return reconstruction
+    else: # return all possible reconstructions
+        reconstructions = problem.getSolutions()
+        return reconstructions
+
+
+
+
+
+# OR-TOOLS IMPLEMENTATION
+# def reconstruct(t,N,n,dim,dist,recval_dict,iterate=False,experiment_id=None):
+    
+#     AWS_ACCESS_KEY_ID='AKIAYZTXUKO5VYMOKEQV'
+#     AWS_SECRET_ACCESS_KEY='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'
+
+#     s3 = boto3.resource('s3', 
+#                         use_ssl=False,
+#                         aws_access_key_id=AWS_ACCESS_KEY_ID,
+#                         aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+#                         )
+    
+#     # LOAD DOMINANT PAIR FREQUENCY DICT
+#     dp_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/dp_frequencies/{dist}/{dim}_dimensions.pkl").get()['Body'].read())
+
+#     # LOAD VALUE FREQUENCY DICT
+#     val_tup_freq_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/val_tup_frequencies/{dist}/{dim}_dim/t{t}.pkl").get()['Body'].read())
+    
+#     records = list(recval_dict.keys())
+
+#     # IF t == 1, just use singleton candidates
+#     if t == 1:
+#         t1_matches = val_tup_freq_dict
+#         model = cp_model.CpModel()
+#         # each record is a collection of integer variables, one for each dimension
+#         vars = [[model.NewIntVar(1, N, f'rec_{records[i]}_{j}') for j in range(dim)] for i in range(n)]
+        
+#         # iterate over all records, adding matches as constraints
+#         # for rec in records:
+#         #     matches = t1_matches[(rec,)]
+#         #     for match in matches:
                 
 
-        # suppose these are possible assignments for recs 0 and 1
-        # retrieved from t2 matches dict
-        possible_assignments = [((1,2),(4,5)),((1,3),(4,6)),((4,3),(2,4))]
+#         # suppose these are possible assignments for recs 0 and 1
+#         # retrieved from t2 matches dict
+#         possible_assignments = [((1,2),(4,5)),((1,3),(4,6)),((4,3),(2,4))]
 
-        constraints = []
+#         constraints = []
 
-        for assignment in possible_assignments:
-            valid_assignment = []
-            for j in range(dim):
-                valid_assignment.append(vars[0][j] == assignment[0][j])  # x_i = (xi1, xi2, xi3)
-                valid_assignment.append(vars[1][j] == assignment[1][j])  # x_{i+1} = (xj1, xj2, xj3)
-            bool_var = model.NewBoolVar(f"assignment_{i}_{i+1}")
-            model.AddBoolAnd(valid_assignment).OnlyEnforceIf(bool_var)  # Only enforce if this assignment is selected
-            bool_vars.append(bool_var)
+#         for assignment in possible_assignments:
+#             valid_assignment = []
+#             for j in range(dim):
+#                 valid_assignment.append(vars[0][j] == assignment[0][j])  # x_i = (xi1, xi2, xi3)
+#                 valid_assignment.append(vars[1][j] == assignment[1][j])  # x_{i+1} = (xj1, xj2, xj3)
+#             bool_var = model.NewBoolVar(f"assignment_{i}_{i+1}")
+#             model.AddBoolAnd(valid_assignment).OnlyEnforceIf(bool_var)  # Only enforce if this assignment is selected
+#             bool_vars.append(bool_var)
 
-                    # Add a boolean variable that represents the validity of this assignment
-        bool_var = model.NewBoolVar(f"assignment_{i}_{i+1}")
-        model.AddBoolAnd(valid_assignment).OnlyEnforceIf(bool_var)  # Only enforce if this assignment is selected
-        bool_vars.append(bool_var)
+#                     # Add a boolean variable that represents the validity of this assignment
+#         bool_var = model.NewBoolVar(f"assignment_{i}_{i+1}")
+#         model.AddBoolAnd(valid_assignment).OnlyEnforceIf(bool_var)  # Only enforce if this assignment is selected
+#         bool_vars.append(bool_var)
 
-        # Add an "OR" constraint: only one valid assignment must be true
-        model.AddBoolOr(bool_vars)
+#         # Add an "OR" constraint: only one valid assignment must be true
+#         model.AddBoolOr(bool_vars)
 
-        # Solve the model
-        solver = cp_model.CpSolver()
-        status = solver.Solve(model)
+#         # Solve the model
+#         solver = cp_model.CpSolver()
+#         status = solver.Solve(model)
 
-        # Check if a solution exists and print it
-        if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-            print("Solution found:")
-            for i in range(n):
-                print(f"x_{i} = ({solver.Value(x[i][0])}, {solver.Value(x[i][1])}, {solver.Value(x[i][2])})")
-        else:
-            print("No solution found.")
-        return
+#         # Check if a solution exists and print it
+#         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+#             print("Solution found:")
+#             for i in range(n):
+#                 print(f"x_{i} = ({solver.Value(x[i][0])}, {solver.Value(x[i][1])}, {solver.Value(x[i][2])})")
+#         else:
+#             print("No solution found.")
+#         return
 
 
-    # LOAD SINGLETON CANDIDATES 
-    t1_matches = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/matches/{dist}/{dim}_dim/t{t}.pkl").get()['Body'].read())
+#     # LOAD SINGLETON CANDIDATES 
+#     t1_matches = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/matches/{dist}/{dim}_dim/t{t}.pkl").get()['Body'].read())
     
-    # Add constraints for every t-tuple of records
-    for rec_t_tuple in combinations(records,t):
-        val_t_tuple = tuple(sorted([recval_dict[r] for r in rec_t_tuple]))
-        bounding_pair = get_mbq(val_t_tuple)
-        freq = dp_dict[bounding_pair]
-        matches = val_tup_freq_dict[freq]
+#     # Add constraints for every t-tuple of records
+#     for rec_t_tuple in combinations(records,t):
+#         val_t_tuple = tuple(sorted([recval_dict[r] for r in rec_t_tuple]))
+#         bounding_pair = get_mbq(val_t_tuple)
+#         freq = dp_dict[bounding_pair]
+#         matches = val_tup_freq_dict[freq]
     
 
-    # Create 10 variables with values between 1 and 1000
-    num_vars = 10
-    variables = [model.NewIntVar(1, 1000, f'var{i}') for i in range(num_vars)]
+#     # Create 10 variables with values between 1 and 1000
+#     num_vars = 10
+#     variables = [model.NewIntVar(1, 1000, f'var{i}') for i in range(num_vars)]
 
     # # Create auxiliary Boolean variables for OR conditions
     # # For each OR condition, we will introduce a Boolean variable to represent whether the condition holds.

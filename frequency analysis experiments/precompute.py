@@ -56,19 +56,22 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
         path = f"dp_frequencies/{dist}/{dim}_dimensions.pkl"
 
         # intialize approximate progress counter
-        total_pairs = (N**dim)**2
-        total_dom_pairs = total_pairs/2**(dim-1)
-        count = 0
+        # total_pairs = (N**dim)**2
+        # total_dom_pairs = total_pairs/2**(dim-1)
+        # count = 0
 
         pair_frequency_dict = {}
         for v in product(range(1, N+1), repeat=dim): # iterate over all values in domain
             for dv in get_all_dominating_values(v,N): # iterate over all dominating values of v
                 pair = (v,dv)
                 frequency = compute_pair_weight(pair,dist,N)
+                # if frequency == 243694:
+                #     print(f"pair {pair} has the frequency")
+                #     input("...")
                 pair_frequency_dict[pair] = frequency
-                count += 1
-                if count % 1000 == 0:
-                    print(f"approximately {count/total_dom_pairs} percent complete")
+                # count += 1
+                # if count % 1000 == 0:
+                #     print(f"approximately {count/total_dom_pairs} percent complete")
 
         # dump to pkl file
 
@@ -100,6 +103,9 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
             sorted_val_tup = tuple(sorted(val_tuple)) # sort values for consistency
             bounding_pair = get_mbq(sorted_val_tup)
             freq = dp_dict[bounding_pair]
+            # if freq == 243694:
+            #     print(f"val tup {val_tuple} with bp {bounding_pair} has the frequency")
+            #     input("...")
             # freq = compute_pair_weight(bounding_pair,dist,N)
             if freq in val_tup_freq_dict.keys():
                 val_tup_freq_dict[freq].append(sorted_val_tup)

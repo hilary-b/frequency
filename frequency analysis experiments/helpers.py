@@ -5,15 +5,15 @@ from itertools import product, combinations
 # return the mbq of a t-tuple
 def get_mbq(t_tup):
     # t = len(t_tup)
-    if type(t_tup[0]) == int:
-        return(((t_tup[0],),(t_tup[0],)))
-    else:
-        dim = len(t_tup[0])
-        minima = []
-        maxima = []
-        for d in range(dim):
-            maxima.append(max([v[d] for v in t_tup]))
-            minima.append(min([v[d] for v in t_tup]))
+    # if type(t_tup[0]) == int:
+    #     return(((t_tup[0],),(t_tup[0],)))
+    # else:
+    dim = len(t_tup[0])
+    minima = []
+    maxima = []
+    for d in range(dim):
+        maxima.append(max([v[d] for v in t_tup]))
+        minima.append(min([v[d] for v in t_tup]))
     return(tuple(minima),tuple(maxima))
 
 # return True if u dominates v, else False
@@ -40,11 +40,9 @@ def find_matches_for_tuple(t_tuple,recval_dict,tup_val_dict,dp_dict,dist,N):
     bounding_pair = get_mbq(val_tuple)
     # tuple_frequency = compute_pair_weight(bounding_pair,dist,N) # lookup frequency of bounding pair
     tuple_frequency = dp_dict[bounding_pair]
-    # print(f"rec t_tuple: {t_tuple}")
-    # print(f"val tuple: {val_tuple}")
-    # print(f"tuple freq: {tuple_frequency}")
-    # # print(243694 in tup_val_dict.keys())
-    # input("...")
+    if tuple_frequency == 243694:
+        print(f"val tup {val_tuple} with bp {bounding_pair} has the frequency")
+        input("...")
     matches = tup_val_dict[tuple_frequency]
     return matches
 
