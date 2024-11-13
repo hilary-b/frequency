@@ -5,6 +5,7 @@ import argparse
 from itertools import product, combinations
 from helpers import *
 import boto3
+from tqdm import tqdm
 
 
 def precompute(t,dim,dist,n,dp,valtup,matches,small):
@@ -79,7 +80,7 @@ def precompute(t,dim,dist,n,dp,valtup,matches,small):
         path = f"dp_frequencies/{dist}/{dim}_dimensions.pkl"
 
         pair_frequency_dict = {}
-        for v in product(range(1, N+1), repeat=dim): # iterate over all values in domain
+        for v in tqdm(product(range(1, N+1), repeat=dim)): # iterate over all values in domain
             for dv in get_all_dominating_values(v,N): # iterate over all dominating values of v
                 pair = (v,dv)
                 frequency = compute_pair_weight(pair,dist,N)
@@ -110,8 +111,9 @@ def precompute(t,dim,dist,n,dp,valtup,matches,small):
         # all values in domain
         for v in product(range(1, N + 1), repeat=dim):
             vals.append(v)
+        print(f"Total combinations: {total_t_tups}")
         # iterate over all t-tuples of values
-        for val_tuple in combinations(vals,t):
+        for val_tuple in tqdm(combinations(vals,t)):
             sorted_val_tup = tuple(sorted(val_tuple)) # sort values for consistency
             bounding_pair = get_mbq(sorted_val_tup,dim)
             freq = dp_dict[bounding_pair]
@@ -120,9 +122,9 @@ def precompute(t,dim,dist,n,dp,valtup,matches,small):
                 val_tup_freq_dict[freq].append(sorted_val_tup)
             else:
                 val_tup_freq_dict[freq] = [sorted_val_tup]
-            progress_counter += 1
-            if progress_counter %100000 == 0:
-                print(f"progress on val tuples: {progress_counter/total_t_tups}")
+            # progress_counter += 1
+            # if progress_counter %100000 == 0:
+            #     print(f"progress on val tuples: {progress_counter/total_t_tups}")
         # dump to pkl
         object = s3.Object('freq-analysis',f'results/{path}' )
         object.put(Body=pickle.dumps(val_tup_freq_dict))
@@ -187,7 +189,7 @@ def precompute(t,dim,dist,n,dp,valtup,matches,small):
         #         # input("...")
         #         matches_dict[record] = matches
         # else:
-        for rec_t_tuple in combinations(records,t):
+        for rec_t_tuple in tqdm(combinations(records,t)):
             sorted_tuple = tuple(sorted(rec_t_tuple)) # sort record tuples for consistency
             # print(sorted_tuple)
             # input("...")
