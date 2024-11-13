@@ -14,6 +14,8 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
     compute_val_tup_freq = valtup
     compute_matches = matches
 
+    special = True
+
     AWS_ACCESS_KEY_ID='AKIAYZTXUKO5VYMOKEQV'
     AWS_SECRET_ACCESS_KEY='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'
 
@@ -50,6 +52,11 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
     elif dim == 5:
         record_value_dict = {0:(4,2,1,3,2),1:(4,4,2,1,2),2:(3,2,1,3,1),3:(3,4,3,4,2),4:(3,3,1,1,4),5:(2,2,1,2,4),7:(2,1,1,2,2),9:(2,3,1,1,3),10:(4,3,1,2,1),11:(1,1,1,3,3)}
 
+    if special == True:
+        N = 4
+        n = 7
+        record_value_dict = {0:(1,2,3),1:(3,2,1),2:(2,2,2),3:(4,1,2),4:(3,2,2),5:(2,2,1),7:(1,1,1)}
+    
     # COMPUTE THE FREQUENCY OF EVERY DOMINANT PAIR
     if compute_dp_freq == 1:
         precompute_timer = time.time()
