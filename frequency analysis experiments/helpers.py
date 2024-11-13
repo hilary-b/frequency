@@ -4,12 +4,14 @@ from itertools import product, combinations
 
 # return the mbq of a t-tuple
 def get_mbq(t_tup,dim):
+
     if type(t_tup[0]) != tuple:
-        print("got a non tuple")
+        print(f"got a non tuple: t_tup {t_tup} and dimension {dim}")
         input("!!!!")
     if len(t_tup[0]) != dim:
         print("dimension doesn't match tuple size")
-        print("!!!!")
+        print(f"t_tup: {t_tup} and dimension {dim}")
+        input("!!!!")
     
     t = len(t_tup)
     if t == 1:
@@ -39,21 +41,19 @@ def get_all_dominating_values(v,N):
             dominating_values.append(u)
     return dominating_values
 
-def find_matches_for_tuple(t_tuple,recval_dict,tup_val_dict,dp_dict,dist,dim,N):
-    # t = len(t_tuple)
-    # dimensions = len(t_tuple[0])
-    # val_tuple = tuple([recval_dict[r] for r in t_tuple])
+def find_matches_for_tuple(rec_t_tuple,recval_dict,tup_val_dict,dp_dict,dist,dim,N,t):
     val_tuple = []
-    for r in t_tuple:
-        val_tuple.append(recval_dict[r],)
-    val_tuple = tuple(val_tuple)
-    print(f"val_tuple: {val_tuple}")
+    for rec in rec_t_tuple:
+        val_tuple.append(tuple(recval_dict[rec]))
+    
+    # print(f"val tuple: {val_tuple}")
+    # input("...")
     bounding_pair = get_mbq(val_tuple,dim)
+    # print(f"val_tuple: {val_tuple}")
+    # print(f"bp: {bounding_pair}")
+    # input("...")
+    # print(dp_dict)
     tuple_frequency = dp_dict[bounding_pair]
-    print(f"bp: {bounding_pair}")
-    if tuple_frequency == 2460:
-        # print(tup_val_dict)
-        input("...")
     matches = tup_val_dict[tuple_frequency]
     return matches
 

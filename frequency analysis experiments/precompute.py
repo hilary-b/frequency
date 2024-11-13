@@ -55,7 +55,7 @@ def precompute(t,dim,dist,n,dp,valtup,matches,small):
         n = 5 # reduced record count
         if dim == 1:
             N = 100
-            record_value_dict = {0:(78),1:(41),2:(80),5:(90),20:(31)}
+            record_value_dict = {0:(78,),1:(41,),2:(80,),5:(90,),20:(31,)}
         elif dim == 2:
             N = 10
             record_value_dict = {0:(2,3),1:(9,10),2:(10,7),5:(4,3),20:(7,2)}
@@ -78,23 +78,12 @@ def precompute(t,dim,dist,n,dp,valtup,matches,small):
         precompute_timer = time.time()
         path = f"dp_frequencies/{dist}/{dim}_dimensions.pkl"
 
-        # intialize approximate progress counter
-        # total_pairs = (N**dim)**2
-        # total_dom_pairs = total_pairs/2**(dim-1)
-        # count = 0
-
         pair_frequency_dict = {}
         for v in product(range(1, N+1), repeat=dim): # iterate over all values in domain
             for dv in get_all_dominating_values(v,N): # iterate over all dominating values of v
                 pair = (v,dv)
                 frequency = compute_pair_weight(pair,dist,N)
-                # if frequency == 243694:
-                #     print(f"pair {pair} has the frequency")
-                #     input("...")
                 pair_frequency_dict[pair] = frequency
-                # count += 1
-                # if count % 1000 == 0:
-                #     print(f"approximately {count/total_dom_pairs} percent complete")
 
         # dump to pkl file
 
@@ -187,18 +176,39 @@ def precompute(t,dim,dist,n,dp,valtup,matches,small):
         # Load value frequency dict
         val_tup_freq_dict = pickle.loads(s3.Bucket("freq-analysis").Object(f"results/val_tup_frequencies/{dist}/{dim}_dim/t{t}.pkl").get()['Body'].read())
 
-        for t_tuple in combinations(records,t):
-            sorted_tuple = tuple(sorted(t_tuple)) # sort record tuples for consistency
-            matches = find_matches_for_tuple(sorted_tuple,record_value_dict,val_tup_freq_dict,dp_dict,dist,dim,N)
-            # print(matches)
+        # # handle singleton tests slightly differently
+        # if t == 1:
+        #     for record in records:
+        #         # print(((record,),))
+        #         # input("...")
+        #         matches = find_matches_for_tuple((record,),record_value_dict,val_tup_freq_dict,dp_dict,dist,dim,N,t)
+        #         # print(f"matches {matches}")
+        #         # print(f"matches dict {matches_dict}")
+        #         # input("...")
+        #         matches_dict[record] = matches
+        # else:
+        for rec_t_tuple in combinations(records,t):
+            sorted_tuple = tuple(sorted(rec_t_tuple)) # sort record tuples for consistency
+            # print(sorted_tuple)
             # input("...")
+            matches = find_matches_for_tuple(sorted_tuple,record_value_dict,val_tup_freq_dict,dp_dict,dist,dim,N,t)
             matches_dict[sorted_tuple] = matches
-        # print(matches_dict)
-        # input("...")
-        # dump to pkl file
+
         object = s3.Object('freq-analysis',f'results/{path}')
         object.put(Body=pickle.dumps(matches_dict))
 
-        print(f"precomputed t{t} matches for {dim} dimensions in {time.time()-precompute_timer} seconds")
+        print(f"computed t{t} matches for {dim} dimensions in {time.time()-precompute_timer} seconds")
 
     print("finished precompute task")
+
+    # print(f"value frequency dict:")
+    # input("...")
+    # print(val_tup_freq_dict)
+    # input("...")
+    # print("dp dict")
+    # input("...")
+    # print(dp_dict)
+    # input("...")
+    # print("matches dict")
+    # input("///")
+    # print(matches_dict)
