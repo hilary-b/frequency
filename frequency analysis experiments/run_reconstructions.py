@@ -2,7 +2,7 @@ from reconstruct import *
 from cpsatreconstruct import *
 
 # PARAMETERS
-t = 4 # set t-constraint for reconstruction and/or finding matches
+t = 2 # set t-constraint for reconstruction and/or finding matches
 n = 10 # set number of records
 dimensions = 3
 distribution = 'uniform' # set query distribution
