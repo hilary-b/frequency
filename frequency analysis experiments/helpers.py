@@ -3,13 +3,18 @@ import pickle
 from itertools import product, combinations
 
 # return the mbq of a t-tuple
-def get_mbq(t_tup):
-    # print(t_tup)
-    # t = len(t_tup)
-    # if type(t_tup[0]) == int:
-    #     return(((t_tup[0],),(t_tup[0],)))
-    # else:
-    dim = len(t_tup[0])
+def get_mbq(t_tup,dim):
+    if type(t_tup[0]) != tuple:
+        print("got a non tuple")
+        input("!!!!")
+    if len(t_tup[0]) != dim:
+        print("dimension doesn't match tuple size")
+        print("!!!!")
+    
+    t = len(t_tup)
+    if t == 1:
+        return((t_tup[0],t_tup[0]))
+    
     minima = []
     maxima = []
     for d in range(dim):
@@ -34,7 +39,7 @@ def get_all_dominating_values(v,N):
             dominating_values.append(u)
     return dominating_values
 
-def find_matches_for_tuple(t_tuple,recval_dict,tup_val_dict,dp_dict,dist,N):
+def find_matches_for_tuple(t_tuple,recval_dict,tup_val_dict,dp_dict,dist,dim,N):
     # t = len(t_tuple)
     # dimensions = len(t_tuple[0])
     # val_tuple = tuple([recval_dict[r] for r in t_tuple])
@@ -42,9 +47,13 @@ def find_matches_for_tuple(t_tuple,recval_dict,tup_val_dict,dp_dict,dist,N):
     for r in t_tuple:
         val_tuple.append(recval_dict[r],)
     val_tuple = tuple(val_tuple)
-    # print(f"val_tuple: {val_tuple}")
-    bounding_pair = get_mbq(val_tuple)
+    print(f"val_tuple: {val_tuple}")
+    bounding_pair = get_mbq(val_tuple,dim)
     tuple_frequency = dp_dict[bounding_pair]
+    print(f"bp: {bounding_pair}")
+    if tuple_frequency == 2460:
+        # print(tup_val_dict)
+        input("...")
     matches = tup_val_dict[tuple_frequency]
     return matches
 

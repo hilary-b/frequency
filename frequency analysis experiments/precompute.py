@@ -7,14 +7,13 @@ from helpers import *
 import boto3
 
 
-def precompute(t,dim,dist,n,dp,valtup,matches):
+def precompute(t,dim,dist,n,dp,valtup,matches,small):
 
     # Flags for which precompute tasks to perform
     compute_dp_freq = dp
     compute_val_tup_freq = valtup
     compute_matches = matches
-
-    special = True
+    small = small
 
     AWS_ACCESS_KEY_ID='AKIAYZTXUKO5VYMOKEQV'
     AWS_SECRET_ACCESS_KEY='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'
@@ -52,10 +51,27 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
     elif dim == 5:
         record_value_dict = {0:(4,2,1,3,2),1:(4,4,2,1,2),2:(3,2,1,3,1),3:(3,4,3,4,2),4:(3,3,1,1,4),5:(2,2,1,2,4),7:(2,1,1,2,2),9:(2,3,1,1,3),10:(4,3,1,2,1),11:(1,1,1,3,3)}
 
-    if special == True:
-        N = 4
-        n = 7
-        record_value_dict = {0:(1,2,3),1:(3,2,1),2:(2,2,2),3:(4,1,2),4:(3,2,2),5:(2,2,1),7:(1,1,1)}
+    if small == True:
+        n = 5 # reduced record count
+        if dim == 1:
+            N = 100
+            record_value_dict = {0:(78),1:(41),2:(80),5:(90),20:(31)}
+        elif dim == 2:
+            N = 10
+            record_value_dict = {0:(2,3),1:(9,10),2:(10,7),5:(4,3),20:(7,2)}
+        elif dim == 3:
+            N = 5
+            record_value_dict = {0:(4,2,4),1:(1,5,4),2:(3,2,1),3:(3,3,4),4:(3,3,1),}
+
+        # if we want to go to 4 dimensions, we can try a domain of 256
+        # if dim == 1:
+        #     N = 256
+        # elif dim == 2:
+        #     N = 16
+        # elif dim == 3:
+        #     N = 6
+        # elif dim == 4:
+        #     N = 4
     
     # COMPUTE THE FREQUENCY OF EVERY DOMINANT PAIR
     if compute_dp_freq == 1:
@@ -108,9 +124,7 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
         # iterate over all t-tuples of values
         for val_tuple in combinations(vals,t):
             sorted_val_tup = tuple(sorted(val_tuple)) # sort values for consistency
-            # print(sorted_val_tup[0])
-            # input("///")
-            bounding_pair = get_mbq(sorted_val_tup)
+            bounding_pair = get_mbq(sorted_val_tup,dim)
             freq = dp_dict[bounding_pair]
 
             if freq in val_tup_freq_dict.keys():
@@ -175,7 +189,7 @@ def precompute(t,dim,dist,n,dp,valtup,matches):
 
         for t_tuple in combinations(records,t):
             sorted_tuple = tuple(sorted(t_tuple)) # sort record tuples for consistency
-            matches = find_matches_for_tuple(sorted_tuple,record_value_dict,val_tup_freq_dict,dp_dict,dist,N)
+            matches = find_matches_for_tuple(sorted_tuple,record_value_dict,val_tup_freq_dict,dp_dict,dist,dim,N)
             # print(matches)
             # input("...")
             matches_dict[sorted_tuple] = matches
